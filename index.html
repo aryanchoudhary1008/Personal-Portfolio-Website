@@ -35,5 +35,27 @@
       <a href="https://www.linkedin.com/in/aryan-choudhary-55a0862b0/" target="_blank">LinkedIn</a>
     </p>
   </section>
+  
+const params = new URLSearchParams(window.location.search);
+const snippetId = params.get("id");
+
+if (snippetId) {
+  
+  document.querySelector("button").style.display = "none";
+
+  
+  db.collection("snippets").doc(snippetId).get().then(doc => {
+    if (doc.exists) {
+      
+      document.getElementById("snippet").value = doc.data().content;
+      
+      document.getElementById("snippet").readOnly = true;
+    } else {
+     
+      document.getElementById("snippet").value = "Snippet not found.";
+    }
+  });
+}
+
 </body>
 </html>
