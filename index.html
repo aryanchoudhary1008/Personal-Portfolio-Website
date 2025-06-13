@@ -4,6 +4,17 @@
   <meta charset="UTF-8">
   <title>Aryan's Portfolio</title>
   <link rel="stylesheet" href="style.css">
+  <style>
+    #snippets a {
+      display: block;
+      margin-bottom: 8px;
+      text-decoration: none;
+      color: #0070f3;
+    }
+    #snippets a:hover {
+      text-decoration: underline;
+    }
+  </style>
 </head>
 <body>
   <header>
@@ -15,7 +26,7 @@
     <h2>About Me</h2>
     <p>
       I'm currently a 4th-semester Computer Science Engineering student passionate about creating digital solutions.
-      I'm exploring Product Management, UI/UX Design, and Cloud Computing (especially AWS). 
+      I'm exploring Product Management, UI/UX Design, and Cloud Computing (especially AWS).
     </p>
   </section>
 
@@ -28,6 +39,11 @@
     </ul>
   </section>
 
+  <section id="snippets">
+    <h2>🔓 Public Snippets</h2>
+    <div id="snippetList">Loading...</div>
+  </section>
+
   <section id="contact">
     <h2>Contact Me</h2>
     <p>Email: aryanchoudharyiaf@gmail.com</p>
@@ -36,59 +52,45 @@
       <a href="https://www.linkedin.com/in/aryan-choudhary-55a0862b0/">LinkedIn</a>
     </p>
   </section>
+
   <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-  import { getFirestore, collection, addDoc, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-  const firebaseConfig = {
+    const firebaseConfig = {
+      apiKey: "AIzaSyDHI0wNSU6VDoHX2tk3g2kRbp4kSrNch3g",
+      authDomain: "portfolio-website-7a129.firebaseapp.com",
+      projectId: "portfolio-website-7a129",
+      storageBucket: "portfolio-website-7a129.firebasestorage.app",
+      messagingSenderId: "600955832879",
+      appId: "1:600955832879:web:1af519c5bd389a2de9d4da",
+      measurementId: "G-C9JEX1M8WW"
+    };
 
-   apiKey: "AIzaSyDHI0wNSU6VDoHX2tk3g2kRbp4kSrNch3g",
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const snippetList = document.getElementById("snippetList");
 
-   authDomain: "portfolio-website-7a129.firebaseapp.com",
+    const q = query(collection(db, "snippets"), where("isPublic", "==", true));
 
-   projectId: "portfolio-website-7a129",
+    getDocs(q).then((querySnapshot) => {
+      if (querySnapshot.empty) {
+        snippetList.innerHTML = "<p>No public snippets yet.</p>";
+        return;
+      }
 
-   storageBucket: "portfolio-website-7a129.firebasestorage.app",
-
-   messagingSenderId: "600955832879",
-
-   appId: "1:600955832879:web:1af519c5bd389a2de9d4da",
-
-   measurementId: "G-C9JEX1M8WW"
-
-  };
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-
-  const textarea = document.getElementById("snippet");
-  const button = document.querySelector("button");
-
-  // Save snippet
-  button.addEventListener("click", async () => {
-    const content = textarea.value;
-    const docRef = await addDoc(collection(db, "snippets"), { content });
-    alert(`Saved! Share this URL: ${window.location.origin}?id=${docRef.id}`);
-  });
-
-  // Load snippet if URL has ID
-  const params = new URLSearchParams(window.location.search);
-  const snippetId = params.get("id");
-
-  if (snippetId) {
-    button.style.display = "none";
-    textarea.readOnly = true;
-
-    const docRef = doc(db, "snippets", snippetId);
-    const docSnap = await getDoc(docRef);
-
-    if (docSnap.exists()) {
-      textarea.value = docSnap.data().content;
-    } else {
-      textarea.value = "Snippet not found.";
-    }
-  }
-</script>
-
-
+      snippetList.innerHTML = "";
+      querySnapshot.forEach((doc) => {
+        const id = doc.id;
+        const content = doc.data().content.substring(0, 80).replace(/\n/g, " ");
+        const preview = content.length > 60 ? content.slice(0, 60) + "..." : content;
+        const link = document.createElement("a");
+        link.href = `sharebin.html?id=${id}`;
+        link.textContent = preview || "Untitled snippet";
+        link.target = "_blank";
+        snippetList.appendChild(link);
+      });
+    });
+  </script>
 </body>
 </html>
