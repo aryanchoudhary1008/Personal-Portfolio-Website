@@ -28,6 +28,7 @@
     // Firebase SDKs
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getFirestore, collection, addDoc, getDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 
     const firebaseConfig = {
 
@@ -54,6 +55,21 @@
 
     const params = new URLSearchParams(window.location.search);
     const id = params.get("id");
+    async function saveText()
+      {
+        const text = document.getElementById("inputBox").value;
+        const isPublic = document.getElementById("publicToggle").checked;
+
+        if (text.trim() === "") return alert("Please enter some text.");
+
+        const docRef = await addDoc(collection(db, "texts"), {
+        content: text,
+        createdAt: serverTimestamp(),
+        public: isPublic
+        });
+
+        alert(`Saved! Share this URL: ${window.location.origin}/sharebin.html?id=${docRef.id}`);
+      }
 
     if (id) {
       // Read-only mode
