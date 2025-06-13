@@ -2,7 +2,11 @@
 <html>
 <head>
   <title>ShareBin ✍️</title>
-  <style>
+  <style #loadingSpinner {
+  font-size: 1rem;
+  color: gray;
+  display: none;
+}>
     body {
       font-family: sans-serif;
       margin: 2rem;
@@ -26,6 +30,8 @@
   </style>
 </head>
 <body>
+  <div id="loadingSpinner">⏳ Loading...</div>
+  
   <h1>ShareBin ✍️</h1>
   <textarea id="snippet" placeholder="Paste or write your text here..."></textarea><br>
 
@@ -35,6 +41,9 @@
   </label><br>
 
   <button id="saveBtn">Save</button>
+  <button id="copyBtn" style="display:none;">Copy to Clipboard</button>
+  <p id="toast" style="display:none; color: green;"></p>
+
   <div class="info" id="infoText"></div>
 
   <script type="module">
@@ -56,6 +65,8 @@
 
     const snippetBox = document.getElementById('snippet');
     const saveBtn = document.getElementById('saveBtn');
+    const copyBtn = document.getElementById('copyBtn');
+    const toast = document.getElementById('toast');
     const infoText = document.getElementById('infoText');
     const publicToggle = document.getElementById('publicToggle');
 
@@ -63,28 +74,46 @@
     const id = params.get("id");
 
     if (id) {
-      // View mode
+      // Read-only mode
       saveBtn.style.display = "none";
       publicToggle.style.display = "none";
       snippetBox.readOnly = true;
+      copyBtn.style.display = "inline-block";
+
       const docRef = doc(db, "snippets", id);
+      const loadingSpinner = document.getElementById("loadingSpinner");
+      loadingSpinner.style.display = "block";
+
       getDoc(docRef).then((docSnap) => {
-        if (docSnap.exists()) {
-          const data = docSnap.data();
-          snippetBox.value = data.content;
-          infoText.innerText = `⏱️ Created At: ${data.createdAt?.toDate().toLocaleString() || 'Unknown'}`;
-        } else {
-          snippetBox.value = "❌ Snippet not found!";
-        }
+      loadingSpinner.style.display = "none";
+  
+      if (docSnap.exists()) {
+      const data = docSnap.data();
+      snippetBox.value = data.content;
+      infoText.textContent = data.isPublic ? "🔓 Public Snippet" : "🔒 Private Snippet";
+      } else {
+      snippetBox.value = "Snippet not found!";
+      copyBtn.style.display = "none";
+    }
+  });
+
+
+      // Copy functionality
+      copyBtn.addEventListener("click", () => {
+        navigator.clipboard.writeText(snippetBox.value).then(() => {
+          toast.textContent = "Copied!";
+          toast.style.display = "block";
+          setTimeout(() => (toast.style.display = "none"), 2000);
+        });
       });
     } else {
       // Save mode
       saveBtn.addEventListener("click", async () => {
-        const content = snippetBox.value.trim();
+        const content = snippetBox.value;
         const isPublic = publicToggle.checked;
 
-        if (!content) {
-          alert("⚠️ Please write something first!");
+        if (!content.trim()) {
+          alert("Please write something first!");
           return;
         }
 
@@ -96,6 +125,7 @@
 
         const shareUrl = `${window.location.origin}${window.location.pathname}?id=${docRef.id}`;
         alert(`✅ Saved! Share this URL:\n${shareUrl}`);
+        window.location.href = shareUrl;
       });
     }
   </script>
