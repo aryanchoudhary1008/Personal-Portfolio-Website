@@ -35,27 +35,51 @@
       <a href="https://www.linkedin.com/in/aryan-choudhary-55a0862b0/" target="_blank">LinkedIn</a>
     </p>
   </section>
-  
-const params = new URLSearchParams(window.location.search);
-const snippetId = params.get("id");
+  <script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+  import { getFirestore, collection, addDoc, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
-if (snippetId) {
-  
-  document.querySelector("button").style.display = "none";
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT.firebaseapp.com",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_PROJECT.appspot.com",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId: "YOUR_APP_ID"
+  };
 
-  
-  db.collection("snippets").doc(snippetId).get().then(doc => {
-    if (doc.exists) {
-      
-      document.getElementById("snippet").value = doc.data().content;
-      
-      document.getElementById("snippet").readOnly = true;
-    } else {
-     
-      document.getElementById("snippet").value = "Snippet not found.";
-    }
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  const textarea = document.getElementById("snippet");
+  const button = document.querySelector("button");
+
+  // Save snippet
+  button.addEventListener("click", async () => {
+    const content = textarea.value;
+    const docRef = await addDoc(collection(db, "snippets"), { content });
+    alert(`Saved! Share this URL: ${window.location.origin}?id=${docRef.id}`);
   });
-}
+
+  // Load snippet if URL has ID
+  const params = new URLSearchParams(window.location.search);
+  const snippetId = params.get("id");
+
+  if (snippetId) {
+    button.style.display = "none";
+    textarea.readOnly = true;
+
+    const docRef = doc(db, "snippets", snippetId);
+    const docSnap = await getDoc(docRef);
+
+    if (docSnap.exists()) {
+      textarea.value = docSnap.data().content;
+    } else {
+      textarea.value = "Snippet not found.";
+    }
+  }
+</script>
+
 
 </body>
 </html>
