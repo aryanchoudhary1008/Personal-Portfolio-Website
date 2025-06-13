@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Public Snippets - ShareBin</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 2rem;
+      max-width: 600px;
+      margin: auto;
+    }
+    h1 {
+      margin-bottom: 1rem;
+    }
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+    li {
+      background: #f5f5f5;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 8px;
+    }
+    a {
+      text-decoration: none;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+  <h1>🌍 Public Snippets</h1>
+  <ul id="snippetList">Loading...</ul>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDHI0wNSU6VDoHX2tk3g2kRbp4kSrNch3g",
+      authDomain: "portfolio-website-7a129.firebaseapp.com",
+      projectId: "portfolio-website-7a129",
+      storageBucket: "portfolio-website-7a129.firebasestorage.app",
+      messagingSenderId: "600955832879",
+      appId: "1:600955832879:web:1af519c5bd389a2de9d4da",
+      measurementId: "G-C9JEX1M8WW"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const snippetList = document.getElementById("snippetList");
+
+    async function loadPublicSnippets() {
+      const q = query(collection(db, "snippets"), where("isPublic", "==", true));
+      const querySnapshot = await getDocs(q);
+
+      snippetList.innerHTML = ""; // Clear loading text
+
+      if (querySnapshot.empty) {
+        snippetList.innerHTML = "<li>No public snippets found.</li>";
+        return;
+      }
+
+      querySnapshot.forEach(doc => {
+        const data = doc.data();
+        const listItem = document.createElement("li");
+        listItem.innerHTML = `<a href="sharebin.html?id=${doc.id}" target="_blank">${data.content.slice(0, 100)}...</a>`;
+        snippetList.appendChild(listItem);
+      });
+    }
+
+    loadPublicSnippets();
+  </script>
+</body>
+</html>
