@@ -27,6 +27,24 @@
       font-size: 0.9rem;
       color: gray;
     }
+    .toast {
+      display: none;
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #4caf50;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 6px;
+      font-size: 14px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      z-index: 999;
+    }
+    .toast.error {
+      background-color: #f44336;
+    }
+
   </style>
 </head>
 <body>
@@ -49,6 +67,16 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getFirestore, collection, addDoc, getDoc, doc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    function showToast(message, isError = false) {
+      const toast = document.getElementById("customToast");
+      toast.textContent = message;
+      toast.className = "toast" + (isError ? " error" : "");
+      toast.style.display = "block";
+      setTimeout(() => {
+        toast.style.display = "none";
+      }, 2500);
+    }
+
 
     const firebaseConfig = {
       apiKey: "AIzaSyDHI0wNSU6VDoHX2tk3g2kRbp4kSrNch3g",
@@ -124,10 +152,12 @@
         });
 
         const shareUrl = `${window.location.origin}${window.location.pathname}?id=${docRef.id}`;
-        alert(`✅ Saved! Share this URL:\n${shareUrl}`);
+        showToast("✅ Snippet Saved! Link copied to clipboard");
+        navigator.clipboard.writeText(shareUrl);
         window.location.href = shareUrl;
       });
     }
   </script>
+  <div id="customToast" class="toast"></div>
 </body>
 </html>
