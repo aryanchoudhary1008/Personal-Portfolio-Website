@@ -1,96 +1,101 @@
-<!-- sharebin.html -->
 <!DOCTYPE html>
 <html>
 <head>
-  <title>ShareBin</title>
+  <title>ShareBin ✍️</title>
   <style>
     body {
       font-family: sans-serif;
       margin: 2rem;
+      max-width: 600px;
     }
     textarea {
       width: 100%;
       height: 200px;
       padding: 10px;
+      margin-top: 10px;
     }
     button {
       margin-top: 10px;
       padding: 10px 20px;
+    }
+    .info {
+      margin-top: 20px;
+      font-size: 0.9rem;
+      color: gray;
     }
   </style>
 </head>
 <body>
   <h1>ShareBin ✍️</h1>
   <textarea id="snippet" placeholder="Paste or write your text here..."></textarea><br>
+
+  <label>
+    <input type="checkbox" id="publicToggle" checked>
+    Make Public
+  </label><br>
+
   <button id="saveBtn">Save</button>
+  <div class="info" id="infoText"></div>
 
   <script type="module">
-    // Firebase SDKs
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, getDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-    import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+    import { getFirestore, collection, addDoc, getDoc, doc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
-
-  	apiKey: "AIzaSyDHI0wNSU6VDoHX2tk3g2kRbp4kSrNch3g",
-
-  	authDomain: "portfolio-website-7a129.firebaseapp.com",
-
-  	projectId: "portfolio-website-7a129",
-
-  	storageBucket: "portfolio-website-7a129.firebasestorage.app",
-
-  	messagingSenderId: "600955832879",
-
-  	appId: "1:600955832879:web:1af519c5bd389a2de9d4da",
-
-  	measurementId: "G-C9JEX1M8WW"
-
+      apiKey: "AIzaSyDHI0wNSU6VDoHX2tk3g2kRbp4kSrNch3g",
+      authDomain: "portfolio-website-7a129.firebaseapp.com",
+      projectId: "portfolio-website-7a129",
+      storageBucket: "portfolio-website-7a129.firebasestorage.app",
+      messagingSenderId: "600955832879",
+      appId: "1:600955832879:web:1af519c5bd389a2de9d4da",
+      measurementId: "G-C9JEX1M8WW"
     };
+
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
     const snippetBox = document.getElementById('snippet');
     const saveBtn = document.getElementById('saveBtn');
+    const infoText = document.getElementById('infoText');
+    const publicToggle = document.getElementById('publicToggle');
 
     const params = new URLSearchParams(window.location.search);
     const id = params.get("id");
-    async function saveText()
-      {
-        const text = document.getElementById("inputBox").value;
-        const isPublic = document.getElementById("publicToggle").checked;
-
-        if (text.trim() === "") return alert("Please enter some text.");
-
-        const docRef = await addDoc(collection(db, "texts"), {
-        content: text,
-        createdAt: serverTimestamp(),
-        public: isPublic
-        });
-
-        alert(`Saved! Share this URL: ${window.location.origin}/sharebin.html?id=${docRef.id}`);
-      }
 
     if (id) {
-      // Read-only mode
+      // View mode
       saveBtn.style.display = "none";
+      publicToggle.style.display = "none";
       snippetBox.readOnly = true;
       const docRef = doc(db, "snippets", id);
       getDoc(docRef).then((docSnap) => {
         if (docSnap.exists()) {
-          snippetBox.value = docSnap.data().content;
+          const data = docSnap.data();
+          snippetBox.value = data.content;
+          infoText.innerText = `⏱️ Created At: ${data.createdAt?.toDate().toLocaleString() || 'Unknown'}`;
         } else {
-          snippetBox.value = "Snippet not found!";
+          snippetBox.value = "❌ Snippet not found!";
         }
       });
     } else {
       // Save mode
       saveBtn.addEventListener("click", async () => {
-        const content = snippetBox.value;
-        if (!content) return alert("Please write something first!");
-        const docRef = await addDoc(collection(db, "snippets"), { content });
-        const shareUrl = `${window.location.origin + window.location.pathname}?id=${docRef.id}`;
-        alert(`Saved! Share this URL: ${shareUrl}`);
+        const content = snippetBox.value.trim();
+        const isPublic = publicToggle.checked;
+
+        if (!content) {
+          alert("⚠️ Please write something first!");
+          return;
+        }
+
+        const docRef = await addDoc(collection(db, "snippets"), {
+          content,
+          isPublic,
+          createdAt: serverTimestamp()
+        });
+
+        const shareUrl = `${window.location.origin}${window.location.pathname}?id=${docRef.id}`;
+        alert(`✅ Saved! Share this URL:\n${shareUrl}`);
       });
     }
   </script>
